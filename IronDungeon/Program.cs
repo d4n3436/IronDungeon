@@ -110,7 +110,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
 
             while (!Exit)
             {
-                int Option = OptionSelection("Enter a option:", MenuOptions, true);
+                int Option = OptionSelection("Enter an option:", MenuOptions, true);
                 switch (Option)
                 {
                     case 1:
