@@ -8,9 +8,10 @@ namespace IronDungeon.API
 {
     public class AIDungeon
     {
-        private const string _ApiEndpoint = "https://api.aidungeon.io";
+        // TODO: Add the option to specify a custom API endpoint in the constructor.
+        private const string ApiEndpoint = "https://api.aidungeon.io";
         public const uint AllScenarios = 362833;
-        private static readonly HttpClient AidClient = new HttpClient { BaseAddress = new Uri(_ApiEndpoint) };
+        private static readonly HttpClient AidClient = new HttpClient { BaseAddress = new Uri(ApiEndpoint) };
 
         public string Token { get; }
 
@@ -67,7 +68,7 @@ namespace IronDungeon.API
                 string content = await response.Content.ReadAsStringAsync();
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"{_ApiEndpoint}/graphql: {response.StatusCode} ({content})");
+                    Console.WriteLine($"{ApiEndpoint}/graphql: {response.StatusCode} ({content})");
                 }
                 return content;
             }

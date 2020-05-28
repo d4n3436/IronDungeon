@@ -62,19 +62,17 @@ Retry: Premium users can hit this button to retry the last action to generate a 
 
 - Try using new words often, the AI gets more creative with variety.
 - Remember to start a ""do "" input with a verb, ex: Attack the orc
-- Use the undo button to delete your last input along with the AI's response.
+- Use the undo command to delete your last input along with the AI's response.
 - Long sentences for actions are no problem! Get creative!
-- Join the community! Check out the ""Explore"" section in the sidebar to view adventures and scenarios published by other players.
 - Want more story to generate ? Just press enter without typing in an action.
-- Use the /remember command or the pin button to edit the story context that the AI always remembers.
+- Use the remember command or the pin button to edit the story context that the AI always remembers.
 - Use the alter command to directly change the AI's response to your input if you want to make some changes to it.
-- For best results, use second person.For example, ""You fly to the moon"" instead of ""I fly to the moon"".";
+- For best results, use second person. For example, ""You fly to the moon"" instead of ""I fly to the moon"".";
 
-        private static readonly List<string> HelpList = new List<string>();
-
+        private static readonly List<string> HelpList = new List<string> { Help1, Help2, Help3, Help4, Help5 };
         private const string CustomPrompt = "Enter a prompt that describes who you are and the first couple sentences of where you start out ex:\n'You are a knight in the kingdom of Larion. You are hunting the evil dragon who has been terrorizing the kingdom. You enter the forest searching for the dragon and see'";
         private const string ConfigFile = "config.json";
-        private readonly static string[] LoginOptions = { "Register", "Use an Email and password", "Use a token", "Exit" };
+        private readonly static string[] LoginOptions = { "Sign up / Register", "Use an Email and password", "Use a token", "Exit" };
         private readonly static string[] MenuOptions = { "Create a new game", "Continue a game", "Edit the configuration", "Help", "Exit" };
         private readonly static string[] ConfigOptions = { "Edit the token", "Slow typing Animation (Current: ", "Logout", "Exit to menu" };
         private static Config UserConfig;
@@ -92,11 +90,6 @@ Retry: Premium users can hit this button to retry the last action to generate a 
         private static async Task Main()
         {
             Console.Write(Splash);
-            HelpList.Add(Help1);
-            HelpList.Add(Help2);
-            HelpList.Add(Help3);
-            HelpList.Add(Help4);
-            HelpList.Add(Help5);
             if (File.Exists(ConfigFile))
             {
                 LoadConfig();
@@ -161,7 +154,6 @@ Retry: Premium users can hit this button to retry the last action to generate a 
             }
             ModeOption--;
 
-            CreationResponse Result;
             string TextToShow;
             uint ID;
             if (Modes.Keys[ModeOption] != "custom")
@@ -204,7 +196,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                 {
                     return;
                 }
-                Result = await API.CreateAdventureAsync(Characters.Values[CharacterOption], Scenario.Data.Content.Prompt.Replace("${character.name}", Name));
+                var Result = await API.CreateAdventureAsync(Characters.Values[CharacterOption], Scenario.Data.Content.Prompt.Replace("${character.name}", Name));
                 if (!IsValidResponse(Scenario))
                 {
                     return;
@@ -225,9 +217,9 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                 Console.WriteLine(CustomPrompt + '\n');
                 while (true)
                 {
-                    Console.Write("Text: ");
+                    Console.Write("Prompt: ");
                     CustomText = Console.ReadLine();
-                    if (string.IsNullOrEmpty(CustomText))
+                    if (string.IsNullOrWhiteSpace(CustomText))
                     {
                         Console.WriteLine("You must enter a text.");
                     }
@@ -240,7 +232,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                         break;
                     }
                 }
-                Console.WriteLine("Creating a new adventure with the custom text...");
+                Console.WriteLine("Creating a new adventure with the custom prompt...");
                 var Adventure = await API.CreateAdventureAsync(Modes.Values[ModeOption]);
                 if (!IsValidResponse(Adventure))
                 {
@@ -288,7 +280,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                 Options.Add($"{Adventure.Title} (ID: {Adventure.ContentId})");
             }
             Options.Add("Exit to menu");
-            int Option = OptionSelection("Select an option:", Options);
+            int Option = OptionSelection("Enter an option:", Options);
             if (Option == Options.Count)
             {
                 // Exit
@@ -332,7 +324,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                 {
                     [1] = $"Slow typing Animation (Current: {UserConfig.SlowTyping})"
                 };
-                int Option = OptionSelection("Select an option:", Options);
+                int Option = OptionSelection("Enter an option:", Options);
                 switch (Option)
                 {
                     case 1:
@@ -347,7 +339,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                         SaveConfig();
                         break;
 
-                    case 3: 
+                    case 3:
                         DeleteConfigFile();
                         HasToken = false;
                         Login();
@@ -382,7 +374,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
             {
                 string Email;
                 string Password;
-                int LoginOption = OptionSelection("Enter a option to log in:", LoginOptions);
+                int LoginOption = OptionSelection("Enter an option to log in:", LoginOptions);
                 switch (LoginOption)
                 {
                     case 1:
@@ -463,7 +455,9 @@ Retry: Premium users can hit this button to retry the last action to generate a 
             {
                 if (Init)
                 {
-                    TypeLine(InitialPrompt + "\n\n");
+                    TypeLine(InitialPrompt + "\n\n" +
+                        "Quick help: Use \"Do\", \"Say\" or \"Story\" at the start of the text to do an action, say something, or make progress on the story.\n" +
+                        "Enter \"quit\" to exit.\n\n");
                     Init = false;
                 }
                 else
@@ -479,7 +473,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                 }
                 CurrentActionType = ActionType.Continue;
                 CurrentInputType = InputType.None;
-                Console.Write("Input: ");
+                Console.Write("> ");
                 Text = Console.ReadLine();
                 if (Text.ToLowerInvariant() == "quit")
                 {
@@ -490,8 +484,8 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                 {
                     CurrentActionType = ActionType.Progress;
                     // Split the text in two, the first part should be the input type, and the second part, the text.
-                    string[] temp = Text.Split(' ', 2);
-                    if (temp.Length == 1 || !Enum.TryParse(temp[0], true, out CurrentInputType))
+                    string[] SplitText = Text.Split(' ', 2);
+                    if (SplitText.Length == 1 || !Enum.TryParse(SplitText[0], true, out CurrentInputType))
                     {
                         // If there isn't two parts or the parse fails, keep the text and set the input type to Do (the default).
                         CurrentInputType = InputType.Do;
@@ -499,8 +493,8 @@ Retry: Premium users can hit this button to retry the last action to generate a 
                     else
                     {
                         // else, CurrentInputType will be one of the valid input types
-                        // and text will be the second part (the rest) of the splitted text.
-                        Text = temp[1];
+                        // and text will be the second part (the rest) of the split text.
+                        Text = SplitText[1];
                     }
                 }
                 //TypeLine("Generating story...");
@@ -650,7 +644,7 @@ Retry: Premium users can hit this button to retry the last action to generate a 
             }
             catch (IOException e)
             {
-                Console.Write("\nAn error ocurred while saving the config: " + e.Message + "\nThe config will not be saved on exit.\nPress any key to continue...");
+                Console.Write("\nAn error occurred while saving the config: " + e.Message + "\nThe config will not be saved on exit.\nPress any key to continue...");
                 Console.ReadKey();
             }
         }

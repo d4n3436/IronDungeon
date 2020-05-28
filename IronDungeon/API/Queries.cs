@@ -58,7 +58,7 @@ namespace IronDungeon.API
             Query = _query;
         }
 
-        public const string _query = "mutation ($email: String!, $password: String!) {\n  login(email: $email, password: $password) {\n    id\n    accessToken\n    __typename\n  }\n}\n";
+        private const string _query = "mutation ($email: String!, $password: String!) {\n  login(email: $email, password: $password) {\n    id\n    accessToken\n    __typename\n  }\n}\n";
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
@@ -185,7 +185,7 @@ namespace IronDungeon.API
         [JsonProperty("query")]
         public string Query { get; set; }
 
-        public const string _query = "query user($input: ContentListInput) {\n  user {\n    id\n    contentList(input: $input) {\n      id\n      contentType\n      contentId\n      title\n      description\n      tags\n      nsfw\n      published\n      createdAt\n      updatedAt\n      deletedAt\n      username\n      userVote\n      totalUpvotes\n      totalDownvotes\n      totalComments\n      __typename\n    }\n    __typename\n  }\n}\n";
+        private const string _query = "query user($input: ContentListInput) {\n  user {\n    id\n    contentList(input: $input) {\n      id\n      contentType\n      contentId\n      title\n      description\n      tags\n      nsfw\n      published\n      createdAt\n      updatedAt\n      deletedAt\n      username\n      userVote\n      totalUpvotes\n      totalDownvotes\n      totalComments\n      __typename\n    }\n    __typename\n  }\n}\n";
 
         public override string ToString()
         {
@@ -231,7 +231,7 @@ namespace IronDungeon.API
         [JsonProperty("query")]
         public string Query { get; set; }
 
-        public const string _query = "mutation {\n  refreshSearchIndex\n}\n";
+        private const string _query = "mutation {\n  refreshSearchIndex\n}\n";
 
         public override string ToString()
         {
@@ -263,7 +263,7 @@ namespace IronDungeon.API
         [JsonProperty("query")]
         public string Query { get; set; }
 
-        public const string _query = "query ($id: String) {\n  content(id: $id) {\n    id\n    published\n    createdAt\n    historyList\n    weeklyContest\n    __typename\n  }\n}\n";
+        private const string _query = "query ($id: String) {\n  content(id: $id) {\n    id\n    published\n    createdAt\n    historyList\n    weeklyContest\n    __typename\n  }\n}\n";
 
         public override string ToString()
         {
@@ -318,7 +318,7 @@ namespace IronDungeon.API
             Variables.Input = Inputs;
         }
 
-        public const string _query = "mutation ($input: UserActionInput!) {\n  performUserAction(input: $input) {\n    id\n    historyList\n    memoryList\n    __typename\n  }\n}\n";
+        private const string _query = "mutation ($input: UserActionInput!) {\n  performUserAction(input: $input) {\n    id\n    historyList\n    memoryList\n    __typename\n  }\n}\n";
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
