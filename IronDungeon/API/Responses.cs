@@ -13,6 +13,15 @@ namespace IronDungeon.API
         public List<ErrorInfo> Errors { get; set; }
     }
 
+    public class AnonymousAccountResponse : IResponse
+    {
+        [JsonProperty("data")]
+        public RegisterData Data { get; set; }
+
+        [JsonProperty("errors", NullValueHandling = NullValueHandling.Ignore)]
+        public List<ErrorInfo> Errors { get; set; }
+    }
+
     public class LoginResponse : IResponse
     {
         [JsonProperty("data")]
@@ -26,6 +35,12 @@ namespace IronDungeon.API
     {
         [JsonProperty("login")]
         public AccountInfo Login { get; set; }
+    }
+
+    public class AnonymousAccountData
+    {
+        [JsonProperty("createAnonymousAccount")]
+        public AccountInfo CreateAnonymousAccount { get; set; }
     }
 
     public class RegisterData
@@ -44,6 +59,21 @@ namespace IronDungeon.API
 
         [JsonProperty("__typename")]
         public string Typename { get; set; }
+    }
+
+    public class ForgotPasswordResponse : IResponse
+    {
+        [JsonProperty("data")]
+        public ForgotPasswordData Data { get; set; }
+
+        [JsonProperty("errors", NullValueHandling = NullValueHandling.Ignore)]
+        public List<ErrorInfo> Errors { get; set; }
+    }
+
+    public class ForgotPasswordData
+    {
+        [JsonProperty("sendForgotPasswordEmail")]
+        public bool SendForgotPasswordEmail { get; set; }
     }
 
     public class UserInfo
@@ -94,10 +124,10 @@ namespace IronDungeon.API
         public bool GameProofRead { get; set; }
 
         [JsonProperty("gameTemperature")]
-        public long GameTemperature { get; set; }
+        public int GameTemperature { get; set; }
 
         [JsonProperty("gameTextLength")]
-        public long GameTextLength { get; set; }
+        public int GameTextLength { get; set; }
 
         [JsonProperty("gameDirectDialog")]
         public bool GameDirectDialog { get; set; }
@@ -118,10 +148,10 @@ namespace IronDungeon.API
         public bool GameShowCommands { get; set; }
 
         [JsonProperty("gameNarrationVolume")]
-        public long GameNarrationVolume { get; set; }
+        public int GameNarrationVolume { get; set; }
 
         [JsonProperty("gameMusicVolume")]
-        public long GameMusicVolume { get; set; }
+        public int GameMusicVolume { get; set; }
 
         [JsonProperty("gameVoiceGender")]
         public string GameVoiceGender { get; set; }
@@ -133,7 +163,7 @@ namespace IronDungeon.API
         public string GameTextColor { get; set; }
 
         [JsonProperty("gameTextSpeed")]
-        public long GameTextSpeed { get; set; }
+        public int GameTextSpeed { get; set; }
 
         [JsonProperty("gameSettingsId")]
         public string GameSettingsId { get; set; }
@@ -256,13 +286,13 @@ namespace IronDungeon.API
         public string UserVote { get; set; }
 
         [JsonProperty("totalUpvotes")]
-        public long TotalUpvotes { get; set; }
+        public int TotalUpvotes { get; set; }
 
         [JsonProperty("totalDownvotes")]
-        public long TotalDownvotes { get; set; }
+        public int TotalDownvotes { get; set; }
 
         [JsonProperty("totalComments")]
-        public long TotalComments { get; set; }
+        public int TotalComments { get; set; }
 
         [JsonProperty("__typename")]
         public string Typename { get; set; }
@@ -280,7 +310,7 @@ namespace IronDungeon.API
     public class RefreshData
     {
         [JsonProperty("refreshSearchIndex")]
-        public long? RefreshSearchIndex { get; set; }
+        public int? RefreshSearchIndex { get; set; }
     }
 
     public class AdventureInfoResponse : IResponse
@@ -313,7 +343,7 @@ namespace IronDungeon.API
         public List<History> HistoryList { get; set; }
 
         [JsonProperty("weeklyContest")]
-        public bool WeeklyContest { get; set; }
+        public bool WeeklyContext { get; set; }
 
         [JsonProperty("__typename")]
         public string Typename { get; set; }
@@ -426,6 +456,9 @@ namespace IronDungeon.API
         [JsonProperty("description")]
         public string Description { get; set; }
 
+        [JsonProperty("musicTheme")]
+        public string MusicTheme { get; set; }
+
         [JsonProperty("tags")]
         public List<string> Tags { get; set; }
 
@@ -454,6 +487,26 @@ namespace IronDungeon.API
         public string Typename { get; set; }
     }
 
+    public partial class ActionResponse : IResponse
+    {
+        [JsonProperty("data")]
+        public ActionData Data { get; set; }
+
+        [JsonProperty("errors", NullValueHandling = NullValueHandling.Ignore)]
+        public List<ErrorInfo> Errors { get; set; }
+    }
+
+    public partial class ActionData
+    {
+        [JsonProperty("doContentAction", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? DoContentAction { get; set; }
+
+        // idk why Alter is the only command that returns this; i'll ignore it
+        [JsonProperty("doAlterAction", NullValueHandling = NullValueHandling.Ignore)]
+        public object DoAlterAction { get; set; }
+    }
+
+    /*
     public class ActionResponse : IResponse
     {
         [JsonProperty("data")]
@@ -483,26 +536,27 @@ namespace IronDungeon.API
         [JsonProperty("__typename")]
         public string Typename { get; set; }
     }
+    */
 
     public class History
     {
         [JsonProperty("id")]
         public string Id { get; set; }
 
+        [JsonProperty("adventureId")]
+        public string AdventureId { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; } // describe, ...
+
         [JsonProperty("userId")]
         public string UserId { get; set; }
 
-        [JsonProperty("actionName")]
-        public string ActionName { get; set; }
+        [JsonProperty("model")]
+        public string Model { get; set; }
 
-        [JsonProperty("input")]
-        public string Input { get; set; }
-
-        [JsonProperty("output")]
-        public string Output { get; set; }
-
-        [JsonProperty("questData")]
-        public object QuestData { get; set; }
+        [JsonProperty("text")]
+        public string Text { get; set; }
 
         [JsonProperty("characterName")]
         public string CharacterName { get; set; }
@@ -512,6 +566,39 @@ namespace IronDungeon.API
 
         [JsonProperty("revertedActionId")]
         public string RevertedActionId { get; set; }
+
+        [JsonProperty("questData")]
+        public QuestData QuestData { get; set; } // this can be null
+
+        [JsonProperty("undone")]
+        public bool Undone { get; set; }
+
+        [JsonProperty("died")]
+        public bool Died { get; set; }
+
+        [JsonProperty("createdAt")]
+        public DateTimeOffset CreatedAt { get; set; }
+
+        [JsonProperty("updatedAt")]
+        public DateTimeOffset UpdatedAt { get; set; }
+
+        [JsonProperty("deletedAt")]
+        public DateTimeOffset? DeletedAt { get; set; }
+
+        //[JsonProperty("input")]
+        //public string Input { get; set; }
+
+        //[JsonProperty("output")]
+        //public string Output { get; set; }
+    }
+
+    public partial class QuestData
+    {
+        [JsonProperty("quest")]
+        public string Quest { get; set; }
+
+        [JsonProperty("completed")]
+        public bool Completed { get; set; }
     }
 
     public class DeleteResponse : IResponse
@@ -565,10 +652,10 @@ namespace IronDungeon.API
     public class Location
     {
         [JsonProperty("line")]
-        public long Line { get; set; }
+        public int Line { get; set; }
 
         [JsonProperty("column")]
-        public long Column { get; set; }
+        public int Column { get; set; }
     }
 
     public interface IResponse

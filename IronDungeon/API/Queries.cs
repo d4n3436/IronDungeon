@@ -1,23 +1,21 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace IronDungeon.API
 {
     // TODO: Use GraphQL query builder
 
-    public class RegisterInfo
+    public class RegisterRequest
     {
-        public RegisterInfo(string Email, string Username, string Password)
+        public RegisterRequest(string email, string username, string password)
         {
-            Query = _query;
             Variables = new RegisterVariables
             {
-                Email = Email,
-                Username = Username,
-                Password = Password
+                Email = email,
+                Username = username,
+                Password = password
             };
         }
-
-        private const string _query = "mutation ($email: String!, $username: String!, $password: String!) {\n  createAccount(email: $email, username: $username, password: $password) {\n    id\n    accessToken\n    __typename\n  }\n}\n";
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
@@ -26,12 +24,7 @@ namespace IronDungeon.API
         public RegisterVariables Variables { get; set; }
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "mutation ($email: String!, $username: String!, $password: String!) {\n  createAccount(email: $email, username: $username, password: $password) {\n    id\n    accessToken\n    __typename\n  }\n}\n";
     }
 
     public class RegisterVariables
@@ -46,19 +39,36 @@ namespace IronDungeon.API
         public string Password { get; set; }
     }
 
-    public class LoginInfo
+    public class AnonymousAccountRequest
     {
-        public LoginInfo(string Email, string Password)
+        public AnonymousAccountRequest()
+        {
+        }
+
+        [JsonProperty("operationName")]
+        public string OperationName { get; set; } = null;
+
+        [JsonProperty("variables")]
+        public AnonymousAccountVariables Variables { get; set; } = new AnonymousAccountVariables();
+
+        [JsonProperty("query")]
+        public string Query { get; set; } = "mutation {\n  createAnonymousAccount {\n    id\n    accessToken\n    __typename\n  }\n}\n";
+    }
+
+    public class AnonymousAccountVariables
+    {
+    }
+
+    public class LoginRequest
+    {
+        public LoginRequest(string email, string password)
         {
             Variables = new LoginVariables
             {
-                Email = Email,
-                Password = Password
+                Email = email,
+                Password = password
             };
-            Query = _query;
         }
-
-        private const string _query = "mutation ($email: String!, $password: String!) {\n  login(email: $email, password: $password) {\n    id\n    accessToken\n    __typename\n  }\n}\n";
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
@@ -67,12 +77,7 @@ namespace IronDungeon.API
         public LoginVariables Variables { get; set; }
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "mutation ($email: String!, $password: String!) {\n  login(email: $email, password: $password) {\n    id\n    accessToken\n    __typename\n  }\n}\n";
     }
 
     public class LoginVariables
@@ -84,15 +89,35 @@ namespace IronDungeon.API
         public string Password { get; set; }
     }
 
-    public class ScenarioInfo
+    public class ForgotPasswordRequest
     {
-        public ScenarioInfo(uint ScenarioID)
+        public ForgotPasswordRequest(string email)
         {
-            Query = _query;
-            Variables = new ScenarioVariables { Id = $"scenario:{ScenarioID}" };
+            Variables = new ForgotPasswordVariables { Email = email };
         }
 
-        private const string _query = "query ($id: String) {\n  content(id: $id) {\n    id\n    contentType\n    contentId\n    title\n    description\n    prompt\n    memory\n    tags\n    nsfw\n    published\n    createdAt\n    updatedAt\n    deletedAt\n    options {\n      id\n      title\n      __typename\n    }\n    __typename\n  }\n}\n";
+        [JsonProperty("operationName")]
+        public string OperationName { get; set; } = null;
+
+        [JsonProperty("variables")]
+        public ForgotPasswordVariables Variables { get; set; }
+
+        [JsonProperty("query")]
+        public string Query { get; set; } = "mutation ($email: String!) {\n  sendForgotPasswordEmail(email: $email)\n}\n";
+    }
+
+    public class ForgotPasswordVariables
+    {
+        [JsonProperty("email")]
+        public string Email { get; set; }
+    }
+
+    public class ScenarioRequest
+    {
+        public ScenarioRequest(uint scenarioId)
+        {
+            Variables = new ScenarioVariables { Id = $"scenario:{scenarioId}" };
+        }
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
@@ -101,12 +126,7 @@ namespace IronDungeon.API
         public ScenarioVariables Variables { get; set; }
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "query ($id: String) {\n  content(id: $id) {\n    id\n    contentType\n    contentId\n    title\n    description\n    prompt\n    memory\n    tags\n    nsfw\n    published\n    createdAt\n    updatedAt\n    deletedAt\n    options {\n      id\n      title\n      __typename\n    }\n    __typename\n  }\n}\n";
     }
 
     public class ScenarioVariables
@@ -115,24 +135,21 @@ namespace IronDungeon.API
         public string Id { get; set; }
     }
 
-    public class CreationInfo
+    public class CreationRequest
     {
-        public CreationInfo(uint ScenarioID, string Prompt = null)
+        public CreationRequest(uint scenarioId, string prompt = null)
         {
-            Query = _query;
             var Vars = new CreationVariables
             {
-                Id = $"scenario:{ScenarioID}"
+                Id = $"scenario:{scenarioId}"
             };
-            if (Prompt != null)
+            if (prompt != null)
             {
-                Vars.Prompt = Prompt;
+                Vars.Prompt = prompt;
             }
 
             Variables = Vars;
         }
-
-        private const string _query = "mutation ($id: String!, $prompt: String) {\n  createAdventureFromScenarioId(id: $id, prompt: $prompt) {\n    id\n    contentType\n    contentId\n    title\n    description\n    tags\n    nsfw\n    published\n    createdAt\n    updatedAt\n    deletedAt\n    publicId\n    historyList\n    __typename\n  }\n}\n";
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
@@ -141,12 +158,7 @@ namespace IronDungeon.API
         public CreationVariables Variables { get; set; }
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "mutation ($id: String!, $prompt: String) {\n  createAdventureFromScenarioId(id: $id, prompt: $prompt) {\n    id\n    contentType\n    contentId\n    title\n    description\n    tags\n    nsfw\n    published\n    createdAt\n    updatedAt\n    deletedAt\n    publicId\n    historyList\n    __typename\n  }\n}\n";
     }
 
     public class CreationVariables
@@ -158,100 +170,74 @@ namespace IronDungeon.API
         public string Prompt { get; set; }
     }
 
-    public class AdventureListInfo
+    public class AdventureListRequest
     {
-        public AdventureListInfo()
+        public AdventureListRequest()
         {
-            OperationName = "user";
-            Query = _query;
-            Variables = new AdventureListVariables
-            {
-                Input = new AdventureListInputInfo
-                {
-                    ContentType = "adventure",
-                    SearchTerm = "",
-                    SortOrder = "createdAt",
-                    TimeRange = null
-                }
-            };
         }
 
         [JsonProperty("operationName")]
-        public string OperationName { get; set; }
+        public string OperationName { get; set; } = "user";
 
         [JsonProperty("variables")]
-        public AdventureListVariables Variables { get; set; }
+        public AdventureListVariables Variables { get; set; } = new AdventureListVariables();
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        private const string _query = "query user($input: ContentListInput) {\n  user {\n    id\n    contentList(input: $input) {\n      id\n      contentType\n      contentId\n      title\n      description\n      tags\n      nsfw\n      published\n      createdAt\n      updatedAt\n      deletedAt\n      username\n      userVote\n      totalUpvotes\n      totalDownvotes\n      totalComments\n      __typename\n    }\n    __typename\n  }\n}\n";
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "query user($input: ContentListInput) {\n  user {\n    id\n    contentList(input: $input) {\n      id\n      contentType\n      contentId\n      title\n      description\n      tags\n      nsfw\n      published\n      createdAt\n      updatedAt\n      deletedAt\n      username\n      userVote\n      totalUpvotes\n      totalDownvotes\n      totalComments\n      __typename\n    }\n    __typename\n  }\n}\n";
     }
 
     public class AdventureListVariables
     {
         [JsonProperty("input")]
-        public AdventureListInputInfo Input { get; set; }
+        public AdventureListInputRequest Input { get; set; } = new AdventureListInputRequest();
     }
 
-    public partial class AdventureListInputInfo
+    public partial class AdventureListInputRequest
     {
         [JsonProperty("contentType")]
-        public string ContentType { get; set; }
+        public string ContentType { get; set; } = "adventure";
 
         [JsonProperty("searchTerm")]
-        public string SearchTerm { get; set; }
+        public string SearchTerm { get; set; } = "";
+
+        [JsonProperty("thirdPerson")]
+        public string ThirdPerson { get; set; } = null;
 
         [JsonProperty("sortOrder")]
-        public string SortOrder { get; set; }
+        public string SortOrder { get; set; } = "createdAt";
 
         [JsonProperty("timeRange")]
-        public string TimeRange { get; set; }
+        public string TimeRange { get; set; } = null;
     }
 
-    public class RefreshInfo
+    public class RefreshRequest
     {
-        public RefreshInfo()
+        public RefreshRequest()
         {
-            Variables = new RefreshVariables();
-            Query = _query;
         }
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
 
         [JsonProperty("variables")]
-        public RefreshVariables Variables { get; set; }
+        public RefreshVariables Variables { get; set; } = new RefreshVariables();
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        private const string _query = "mutation {\n  refreshSearchIndex\n}\n";
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "mutation {\n  refreshSearchIndex\n}\n";
     }
 
     public class RefreshVariables
     {
     }
 
-    public class AdventureInfo
+    public class AdventureInfoRequest
     {
-        public AdventureInfo(uint AdventureID)
+        public AdventureInfoRequest(uint adventureId)
         {
             Variables = new AdventureVariables
             {
-                Id = $"adventure:{AdventureID}"
+                Id = $"adventure:{adventureId}"
             };
-            Query = _query;
         }
 
         [JsonProperty("operationName")]
@@ -261,14 +247,7 @@ namespace IronDungeon.API
         public AdventureVariables Variables { get; set; }
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        private const string _query = "query ($id: String) {\n  content(id: $id) {\n    id\n    published\n    createdAt\n    historyList\n    weeklyContest\n    __typename\n  }\n}\n";
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "query ($id: String) {\n  content(id: $id) {\n    id\n    published\n    createdAt\n    historyList\n    weeklyContest\n    __typename\n  }\n}\n";
     }
 
     public class AdventureVariables
@@ -277,48 +256,39 @@ namespace IronDungeon.API
         public string Id { get; set; }
     }
 
-    public class ActionInfo
+    public class ActionRequest
     {
-        public ActionInfo(uint AdventureID, ActionType Action, InputType Type = InputType.None, string Input = "", string Output = "")
+        public ActionRequest(uint adventureId, ActionType action, string text = "", uint actionId = 0)
         {
-            Query = _query;
-            Variables = new ActionVariables();
-            var Inputs = new InputInfo
+            var inputData = new InputData
             {
-                AdventureId = AdventureID.ToString()
+                Id = $"adventure:{adventureId}",
+                Type = action.ToString().ToLowerInvariant()
             };
-            if (Action == ActionType.Progress)
-            {
-                if (Input != "")
-                {
-                    Inputs.Input = Input;
-                }
-                else
-                {
-                    Action = ActionType.Continue;
-                }
-            }
-            Inputs.ActionName = Action.ToString().ToLowerInvariant();
-            if (Action == ActionType.Progress)
-            {
-                if (Type == InputType.None)
-                    Type = InputType.Do;
-                Inputs.InputType = Type.ToString();
-            }
-            if (Action == ActionType.Remember || Action == ActionType.Alter)
-            {
-                Inputs.Input = Input;
-                if (Action == ActionType.Alter)
-                {
-                    Inputs.Output = Output;
-                }
-            }
-            Inputs.Platform = "web";
 
-            Variables.Input = Inputs;
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (action != ActionType.Continue && action != ActionType.Undo && action != ActionType.Redo && action != ActionType.Retry)
+                {
+                    inputData.Text = text;
+                }
+            }
+
+            if (actionId != 0)
+            {
+                if (action == ActionType.Alter)
+                {
+                    inputData.ActionId = actionId.ToString();
+
+                    // Alter command is special :)
+                    Query = "mutation ($input: ContentActionInput) {\n  doAlterAction(input: $input) {\n    id\n    historyList\n    __typename\n  }\n}\n";
+                }
+            }
+            Variables = new ActionVariables
+            {
+                Input = inputData
+            };
         }
-
-        private const string _query = "mutation ($input: UserActionInput!) {\n  performUserAction(input: $input) {\n    id\n    historyList\n    memoryList\n    __typename\n  }\n}\n";
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
@@ -327,50 +297,37 @@ namespace IronDungeon.API
         public ActionVariables Variables { get; set; }
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "mutation ($input: ContentActionInput) {\n  doContentAction(input: $input)\n}\n";
     }
 
-    public class ActionVariables
+    public partial class ActionVariables
     {
         [JsonProperty("input")]
-        public InputInfo Input { get; set; }
+        public InputData Input { get; set; }
     }
 
-    public class InputInfo
+    public partial class InputData
     {
-        [JsonProperty("actionName")]
-        public string ActionName { get; set; } // progress, continue (when no text passed)
+        [JsonProperty("actionId", NullValueHandling = NullValueHandling.Ignore)]
+        public string ActionId { get; set; }
 
-        [JsonProperty("adventureId")]
-        public string AdventureId { get; set; }
+        [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
+        public string Text { get; set; }
 
-        [JsonProperty("input", NullValueHandling = NullValueHandling.Ignore)]
-        public string Input { get; set; }
+        [JsonProperty("type")]
+        public string Type { get; set; }
 
-        [JsonProperty("inputType", NullValueHandling = NullValueHandling.Ignore)]
-        public string InputType { get; set; }
 
-        [JsonProperty("output", NullValueHandling = NullValueHandling.Ignore)]
-        public string Output { get; set; }
-
-        [JsonProperty("platform")]
-        public string Platform { get; set; }
+        [JsonProperty("id")]
+        public string Id { get; set; }
     }
 
-    public class DeleteInfo
+    public class DeleteRequest
     {
-        public DeleteInfo(uint AdventureID)
+        public DeleteRequest(uint adventureId)
         {
-            Query = _query;
-            Variables = new DeleteVariables { Id = $"adventure:{AdventureID}" };
+            Variables = new DeleteVariables { Id = $"adventure:{adventureId}" };
         }
-
-        private const string _query = "mutation ($id: String!) {\n  deleteContent(id: $id) {\n    id\n    deletedAt\n    __typename\n  }\n}\n";
 
         [JsonProperty("operationName")]
         public string OperationName { get; set; } = null;
@@ -379,12 +336,7 @@ namespace IronDungeon.API
         public DeleteVariables Variables { get; set; }
 
         [JsonProperty("query")]
-        public string Query { get; set; }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public string Query { get; set; } = "mutation ($id: String!) {\n  deleteContent(id: $id) {\n    id\n    deletedAt\n    __typename\n  }\n}\n";
     }
 
     public class DeleteVariables

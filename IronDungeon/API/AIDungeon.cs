@@ -9,203 +9,123 @@ namespace IronDungeon.API
     public class AIDungeon
     {
         // TODO: Add the option to specify a custom API endpoint in the constructor.
-        private const string ApiEndpoint = "https://api.aidungeon.io";
-        public const uint AllScenarios = 362833;
-        private static readonly HttpClient AidClient = new HttpClient { BaseAddress = new Uri(ApiEndpoint) };
 
-        public string Token { get; }
+        public const string ApiEndpoint = "https://api.aidungeon.io";
+        public const uint AllScenarios = 458612; //362833
+        private static readonly HttpClient _aidClient = new HttpClient { BaseAddress = new Uri(ApiEndpoint) };
 
-        private AIDungeon()
+        public string Token { get; set; }
+
+        public AIDungeon()
         {
         }
 
-        public AIDungeon(string Token)
+        public AIDungeon(string token)
         {
-            this.Token = Token;
+            Token = token;
         }
 
-        public AIDungeon(string Email, string Password)
+        private async Task<string> SendApiRequestAsync<T>(T jsonRequest, bool useAccessToken = true) where T : class
         {
-            var task = Task.Run(() => LoginAsync(Email, Password));
-            task.Wait();
-            LoginResponse Response = task.Result;
-            if (Response == null || Response.Errors != null)
-            {
-                Token = null;
-            }
-            else
-            {
-                Token = Response.Data.Login.AccessToken;
-            }
-        }
-
-        public AIDungeon(string Email, string Username, string Password)
-        {
-            var task = Task.Run(() => RegisterAsync(Email, Username, Password));
-            task.Wait();
-            RegisterResponse Response = task.Result;
-            if (Response == null || Response.Errors != null)
-            {
-                Token = null;
-            }
-            else
-            {
-                Token = Response.Data.CreateAccount.AccessToken;
-            }
-        }
-
-        private async Task<string> RunAPIRequestAsync(string JsonQuery, bool UseAccessToken = true)
-        {
-            var requestContent = new StringContent(JsonQuery, Encoding.UTF8, "application/json");
+            string jsonString = JsonConvert.SerializeObject(jsonRequest);
             using (var request = new HttpRequestMessage(HttpMethod.Post, "/graphql"))
+            using (var requestContent = new StringContent(jsonString, Encoding.UTF8, "application/json"))
             {
-                if (UseAccessToken)
+                if (useAccessToken)
                 {
+                    if (string.IsNullOrEmpty(Token))
+                    {
+                        throw new NullReferenceException("Token can't be empty.");
+                    }
+                    //if (Guid.TryParse(Token, out _))
+                    //{
+                    //    throw new NullReferenceException("Invalid token.");
+                    //}
                     request.Headers.Add("X-Access-Token", Token);
                 }
                 request.Content = requestContent;
-                var response = await AidClient.SendAsync(request);
+                var response = await _aidClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
                 string content = await response.Content.ReadAsStringAsync();
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"{ApiEndpoint}/graphql: {response.StatusCode} ({content})");
-                }
                 return content;
             }
         }
 
-        public async Task<RegisterResponse> RegisterAsync(string Email, string Username, string Password)
+        public async Task<RegisterResponse> RegisterAsync(string email, string username, string password)
         {
-            string query = new RegisterInfo(Email, Username, Password).ToString();
-            string content = await RunAPIRequestAsync(query, false);
-            try
-            {
-                return JsonConvert.DeserializeObject<RegisterResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                return null;
-            }
+            var request = new RegisterRequest(email, username, password);
+            string response = await SendApiRequestAsync(request, false);
+            return JsonConvert.DeserializeObject<RegisterResponse>(response);
         }
 
-        public async Task<LoginResponse> LoginAsync(string Email, string Password)
+        public async Task<AnonymousAccountResponse> CreateAnonymousAccountAsync()
         {
-            string query = new LoginInfo(Email, Password).ToString();
-            string content = await RunAPIRequestAsync(query, false);
-            try
-            {
-                return JsonConvert.DeserializeObject<LoginResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                //Console.WriteLine($"User login: invalid response content: {content}");
-                return null;
-            }
+            var request = new AnonymousAccountRequest();
+            string response = await SendApiRequestAsync(request, false);
+            return JsonConvert.DeserializeObject<AnonymousAccountResponse>(response);
         }
 
-        public async Task<CreationResponse> CreateAdventureAsync(uint ScenarioID, string Prompt = null)
+        public async Task<LoginResponse> LoginAsync(string email, string password)
         {
-            string query = new CreationInfo(ScenarioID, Prompt).ToString();
-            string content = await RunAPIRequestAsync(query);
-            try
-            {
-                return JsonConvert.DeserializeObject<CreationResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                Console.WriteLine($"Adventure creation ({ScenarioID}): invalid response content: {content}");
-                return null;
-            }
+            var request = new LoginRequest(email, password);
+            string response = await SendApiRequestAsync(request, false);
+            return JsonConvert.DeserializeObject<LoginResponse>(response);
         }
 
-        public async Task<ScenarioResponse> GetScenarioAsync(uint ScenarioID)
+        public async Task<ForgotPasswordResponse> SendForgotPasswordEmailAsync(string email)
         {
-            string query = new ScenarioInfo(ScenarioID).ToString();
-            string content = await RunAPIRequestAsync(query);
-            try
-            {
-                return JsonConvert.DeserializeObject<ScenarioResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                Console.WriteLine($"Get Scenario ({ScenarioID}): invalid response content: {content}");
-                return null;
-            }
+            var request = new ForgotPasswordRequest(email);
+            string response = await SendApiRequestAsync(request, false);
+            return JsonConvert.DeserializeObject<ForgotPasswordResponse>(response);
+        }
+
+        public async Task<CreationResponse> CreateAdventureAsync(uint scenarioId, string prompt = null)
+        {
+            var request = new CreationRequest(scenarioId, prompt);
+            string response = await SendApiRequestAsync(request);
+            return JsonConvert.DeserializeObject<CreationResponse>(response);
+        }
+
+        public async Task<ScenarioResponse> GetScenarioAsync(uint ScenarioId)
+        {
+            var request = new ScenarioRequest(ScenarioId);
+            string response = await SendApiRequestAsync(request);
+            return JsonConvert.DeserializeObject<ScenarioResponse>(response);
         }
 
         public async Task<AdventureListResponse> GetAdventureListAsync()
         {
-            string query = new AdventureListInfo().ToString();
-            string content = await RunAPIRequestAsync(query);
-            try
-            {
-                return JsonConvert.DeserializeObject<AdventureListResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                Console.WriteLine($"Get adventure list: invalid response content: {content}");
-                return null;
-            }
+            var request = new AdventureListRequest();
+            string response = await SendApiRequestAsync(request);
+            return JsonConvert.DeserializeObject<AdventureListResponse>(response);
         }
 
         public async Task<RefreshResponse> RefreshAdventureListAsync()
         {
-            var query = new RefreshInfo().ToString();
-            string content = await RunAPIRequestAsync(query);
-            try
-            {
-                return JsonConvert.DeserializeObject<RefreshResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                Console.WriteLine($"Refresh adventure list: invalid response content: {content}");
-                return null;
-            }
+            var request = new RefreshRequest();
+            string response = await SendApiRequestAsync(request);
+            return JsonConvert.DeserializeObject<RefreshResponse>(response);
         }
 
-        public async Task<AdventureInfoResponse> GetAdventureAsync(uint AdventureID)
+        public async Task<AdventureInfoResponse> GetAdventureAsync(uint adventureId)
         {
-            string query = new AdventureInfo(AdventureID).ToString();
-            string content = await RunAPIRequestAsync(query);
-            try
-            {
-                return JsonConvert.DeserializeObject<AdventureInfoResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                Console.WriteLine($"Refresh adventure: invalid response content: {content}");
-                return null;
-            }
+            var request = new AdventureInfoRequest(adventureId);
+            string response = await SendApiRequestAsync(request);
+            return JsonConvert.DeserializeObject<AdventureInfoResponse>(response);
         }
 
-        public async Task<ActionResponse> RunActionAsync(uint AdventureID, ActionType Action, InputType InputType = InputType.None, string Input = "", string Output = "")
+        public async Task<ActionResponse> RunActionAsync(uint adventureId, ActionType action, string text = "", uint actionId = 0)
         {
-            string query = new ActionInfo(AdventureID, Action, InputType, Input, Output).ToString();
-            string content = await RunAPIRequestAsync(query);
-            try
-            {
-                return JsonConvert.DeserializeObject<ActionResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                Console.WriteLine($"Run Action {Action} ({AdventureID}): invalid response content: {content}");
-                return null;
-            }
+            var request = new ActionRequest(adventureId, action, text, actionId);
+            string response = await SendApiRequestAsync(request);
+            return JsonConvert.DeserializeObject<ActionResponse>(response);
         }
 
-        public async Task<DeleteResponse> DeleteAdventureAsync(uint AdventureID)
+        public async Task<DeleteResponse> DeleteAdventureAsync(uint adventureId)
         {
-            string query = new DeleteInfo(AdventureID).ToString();
-            string content = await RunAPIRequestAsync(query);
-            try
-            {
-                return JsonConvert.DeserializeObject<DeleteResponse>(content);
-            }
-            catch (JsonSerializationException)
-            {
-                Console.WriteLine($"Delete Adventure ({AdventureID}): invalid response content: {content}");
-                return null;
-            }
+            var request = new DeleteRequest(adventureId);
+            string response = await SendApiRequestAsync(request);
+            return JsonConvert.DeserializeObject<DeleteResponse>(response);
         }
     }
 }

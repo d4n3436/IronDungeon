@@ -6,8 +6,8 @@ namespace IronDungeon
     {
         public Config(string token, bool slowTyping)
         {
-            this.Token = token;
-            this.SlowTyping = slowTyping;
+            Token = token;
+            SlowTyping = slowTyping;
         }
 
         [JsonProperty("token")]

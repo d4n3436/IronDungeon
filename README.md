@@ -1,2 +1,2 @@
 # IronDungeon
-An AI Dungeon CLI and API.
+An AI Dungeon CLI client and API.
