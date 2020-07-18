@@ -353,7 +353,7 @@ namespace IronDungeon.API
         }
 
         [JsonProperty("id")]
-        public string Id { get; set; } = "1";
+        public string Id { get; set; } = "2";
 
         [JsonProperty("type")]
         public string Type { get; set; } = "start";

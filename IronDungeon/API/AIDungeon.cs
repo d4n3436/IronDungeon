@@ -42,7 +42,7 @@ namespace IronDungeon.API
             await _webSocket.SendAsync(new ArraySegment<byte>(encodedInit), WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
-        public async Task<WebSocketActionResponse> SendWebSocketActionAsync(uint adventureId, ActionType action, string text = "", uint actionId = 0)
+        private async Task<WebSocketActionResponse> SendWebSocketActionAsync(uint adventureId, ActionType action, string text = "", uint actionId = 0)
         {
             if (string.IsNullOrEmpty(Token))
             {
@@ -108,7 +108,7 @@ namespace IronDungeon.API
                         // idk if this works
                         if (response.Contains("{\"type\":\"complete\""))
                         {
-                            string stop = "{\"id\":\"1\",\"type\":\"stop\"}";
+                            string stop = "{\"id\":\"2\",\"type\":\"stop\"}";
 #if DEBUG
                             Console.WriteLine($"send: {stop}");
 #endif
