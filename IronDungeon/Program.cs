@@ -107,9 +107,9 @@ Retry: Retries the last action and generates a new response. Very helpful when y
 
             while (!Exit)
             {
-                int Option = OptionSelection("Enter an option:", MenuOptions, isFirst, isFirst);
+                int option = OptionSelection("Enter an option:", MenuOptions, isFirst, isFirst);
                 isFirst = true;
-                switch (Option)
+                switch (option)
                 {
                     case 1:
                         await CreateNewGameAsync();
@@ -241,7 +241,7 @@ Retry: Retries the last action and generates a new response. Very helpful when y
 
         private static async Task CreateNewGameAsync()
         {
-            Console.WriteLine("\nLoading...");
+            Console.Write("\nLoading...");
             ScenarioResponse modeList = null;
             try
             {
@@ -249,7 +249,7 @@ Retry: Retries the last action and generates a new response. Very helpful when y
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine($"An error occurred: {e.Message}");
+                Console.WriteLine($"\nAn error occurred: {e.Message}");
             }
             if (!IsValidResponse(modeList))
             {
@@ -394,31 +394,31 @@ Retry: Retries the last action and generates a new response. Very helpful when y
                     return;
                 }
 
-                ActionResponse action = null;
-                AdventureInfoResponse response = null;
+                WebSocketActionResponse response = null;
                 try
                 {
-                    action = await API.RunActionAsync(uint.Parse(adventure.Data.AdventureInfo.ContentId, CultureInfo.InvariantCulture), ActionType.Describe, customText);
-
-                    // wait a few seconds to generate the story
-                    await Task.Delay(6000);
-                    response = await API.GetAdventureAsync(uint.Parse(adventure.Data.AdventureInfo.ContentId, CultureInfo.InvariantCulture));
+                    response = await API.RunWebSocketActionAsync(uint.Parse(adventure.Data.AdventureInfo.ContentId, CultureInfo.InvariantCulture), ActionType.Story, customText);
                 }
-                catch (HttpRequestException e)
+                catch (IOException e)
                 {
                     Console.WriteLine($"An error occurred: {e.Message}");
                 }
-                if (!IsValidResponse(action))
+                catch (JsonSerializationException e)
                 {
-                    return;
+                    Console.WriteLine($"An error occurred: {e.Message}");
+                }
+                catch (TimeoutException e)
+                {
+                    Console.WriteLine($"An error occurred: {e.Message}");
                 }
                 if (!IsValidResponse(response))
                 {
                     return;
                 }
+                var content = response.Payload.Data.SubscribeContent;
 
-                id = uint.Parse(response.Data.Content.Id.Substring(10), CultureInfo.InvariantCulture); // "adventure:xxxxxxx"
-                historyList = response.Data.Content.HistoryList; // Action.Data.UserAction.HistoryList.Count - 1
+                id = uint.Parse(content.Id.Substring(10), CultureInfo.InvariantCulture); // "adventure:xxxxxxx"
+                historyList = content.HistoryList;
             }
 
             await ProcessAdventureAsync(id, historyList);
@@ -497,8 +497,6 @@ Retry: Retries the last action and generates a new response. Very helpful when y
 
         private static async Task ProcessAdventureAsync(uint adventureId, List<History> historyList)
         {
-            ActionResponse actionResponse;
-            AdventureInfoResponse adventureResponse;
             ActionType action;
             string text;
             uint lastActionId = 0;
@@ -532,7 +530,7 @@ Retry: Retries the last action and generates a new response. Very helpful when y
 
             TypeLine(lastHistory.Trim() + "\n");
 
-            TypeLine("Quick help: Use \"Do\", \"Say\" or \"Describe\" at the start of your input to do an action, say something, or make progress on the story.");
+            TypeLine("Quick help: Use \"Do\", \"Say\" or \"Story\" at the start of your input to do an action, say something, or make progress on the story.");
 
             TypeLine("Other commands:\n");
             TypeLine("\"Undo\": Undo the last action.");
@@ -593,30 +591,30 @@ Retry: Retries the last action and generates a new response. Very helpful when y
                 {
                     lastActionId = uint.Parse(historyList[historyList.Count - 1].Id, CultureInfo.InvariantCulture);
                 }
-                actionResponse = null;
-                adventureResponse = null;
+                WebSocketActionResponse response = null;
                 try
                 {
-                    actionResponse = await API.RunActionAsync(adventureId, action, text, lastActionId);
-
-                    // wait a few seconds to generate the story
-                    await Task.Delay(6000);
-                    adventureResponse = await API.GetAdventureAsync(adventureId);
+                    response = await API.RunWebSocketActionAsync(adventureId, action, text, lastActionId);
                 }
-                catch (HttpRequestException e)
+                catch (IOException e)
                 {
                     Console.WriteLine($"An error occurred: {e.Message}");
                 }
-                if (!IsValidResponse(actionResponse))
+                catch (JsonSerializationException e)
                 {
-                    break;
+                    Console.WriteLine($"An error occurred: {e.Message}");
                 }
-                if (!IsValidResponse(adventureResponse))
+                catch (TimeoutException e)
                 {
-                    break;
+                    Console.WriteLine($"An error occurred: {e.Message}");
+                }
+                if (!IsValidResponse(response))
+                {
+                    continue;
+                    //break;
                 }
 
-                historyList = adventureResponse.Data.Content.HistoryList;
+                historyList = response.Payload.Data.SubscribeContent.HistoryList;
 
                 string textToShow = historyList[historyList.Count - 1].Text;
                 if (action != ActionType.Continue && action != ActionType.Undo && action != ActionType.Redo && action != ActionType.Alter)
@@ -742,6 +740,25 @@ Retry: Retries the last action and generates a new response. Very helpful when y
             catch
             {
             }
+        }
+
+        private static bool IsValidResponse(WebSocketActionResponse response)
+        {
+            var content = response?.Payload?.Data?.SubscribeContent;
+            if (content == null)
+            {
+                Console.Write("\nPress any key to continue...");
+                Console.ReadKey();
+                return false;
+            }
+            if (content.Error != null)
+            {
+                Console.WriteLine($"En error occurred: {content.Error.Message}");
+                Console.Write("Press any key to continue...");
+                Console.ReadKey();
+                return false;
+            }
+            return true;
         }
 
         private static bool IsValidResponse(IResponse response)
