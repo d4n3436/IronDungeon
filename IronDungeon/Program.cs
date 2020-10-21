@@ -878,7 +878,7 @@ Retry: Retries the last action and generates a new response. Very helpful when y
             Console.Write(Opening);
 
             TypeLine("IronDungeon - An AI Dungeon CLI client and API.\n");
-            TypeLine("Made by d4n (d4n#9385), for personal use only.\n");
+            TypeLine("Made by d4n (d4n#9385).\n");
             TypeLine("Web app API by aidungeon.io\n");
             Type("Press any key to continue...");
             Console.ReadKey();
